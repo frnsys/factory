@@ -220,7 +220,7 @@ if __name__ == '__main__':
 
     if len(args) < 4:
         print('Please specify the method, input files (comma-separated), and output file.')
-        print('One of the following methods work: {}'.format([m for m in globals() if m.startswith('train_')]))
+        print('One of the following methods work: {}'.format([m.replace('train_', '') for m in globals() if m.startswith('train_')]))
         sys.exit(0)
 
     paths_ = args[2].split(',')
@@ -234,4 +234,4 @@ if __name__ == '__main__':
             paths.append(path)
 
     # Convenient, but hacky
-    globals()[args[1]](paths, out)
+    globals()['train_{}'.format(args[1])](paths, out)
