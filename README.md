@@ -1,18 +1,25 @@
-# factory
+# Factory
 
-Script to train various NLP models for use in other projects
+Build various NLP models in a parallel manner
 
-I often have to train NLP models for various projects in a redundant way - `factory` keeps that training in one place so I don't have to repeat myself
-
-## Setup
-
-    $ pip install -r requirements.txt
 
 ## Usage
 
-    $ python train.py <model> <comma-separated input files or glob wildcard pattern>
+For more efficient memory-usage in parallel processing, run the bigram phrase model as a separate process:
 
-For example:
+    $ python service.py phrases
 
-    $ python train.py doc2vec file1.txt,file2.txt,file3.txt
-    $ python train.py doc2vec corpus/*.txt
+The factory will automatically connect to this process if it is needed and available. Otherwise, it falls back to loading the phrases model directly.
+
+
+Then run the command you want, for example:
+
+    $ python train.py train_idf "data/*.txt" data/idf.json method=word
+
+You can see all available commands by running:
+
+    $ python train.py
+
+The structure of the commands are generally:
+
+    $ python train.py <command> <path to input> <path to ouput> <kwargs>
