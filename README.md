@@ -23,3 +23,65 @@ You can see all available commands by running:
 The structure of the commands are generally:
 
     $ python train.py <command> <path to input> <path to ouput> <kwargs>
+
+
+## AWS Spot Instances
+
+On consumer hardware, these models can sometimes take a very long time to train. Parallelization doesn't always help since it may increase memory requirements to beyond what's available on your own machine.
+
+`factory` can take advantage of the cheap pricing of AWS spot instances. You can easily bid on short-term computing power, quickly train your model (e.g. on a GPU or memory optimized instance), and download the resulting model.
+
+Specify your AWS credentials in `~/.aws/credentials`:
+
+    [default]
+    aws_access_key_id = YOURACCESSKEY
+    aws_secret_access_key = YOURSECRETKEY
+
+    [another_profile]
+    aws_access_key_id = YOURACCESSKEY
+    aws_secret_access_key = YOURSECRETKEY
+
+Then create a `factory` config at `~/.factory.json` with the following (filled with whatever values you prefer, of course):
+
+    {
+        "region": "us-east-1",
+        "profile": "another_profile",
+        "ami": "ami-4be21a20",
+        "key_name": "my_key_pair"
+    }
+
+If it will be consistent across your usage.
+
+Then you have a few options:
+
+    # Create a spot instance request
+    $ python outsource.py request <name> <instance type> <path to user data script>
+    $ python outsource.py request doc2vec r3.2xlarge user_data.sh
+    # Then you can do:
+    $ ssh -i my_key_pair.pem ubuntu@<instance's public ip>
+    # Try `ec2-user` if `ubuntu` doesn't work
+
+    # Cancel a spot instance request
+    $ python outsource.py cancel <request id>
+    $ python outsource.py cancel ssi-02baen2k
+
+    # Terminate a spot instance
+    $ python outsource.py terminate <name>
+    $ python outsource.py terminate doc2vec
+
+    # List spot instances and requests
+    $ python outsource.py ls
+
+What `factory` does for you:
+- it will look at current bids for your requests instance type in your region, list out their min/max/mean, and suggest a bid price.
+- it will create a security group with SSH access for your local machine (i.e. the machine making the spot instance request). It will also clean up this security group when you terminate the instance.
+- it will tell you the public IP of the spot instance when it's ready.
+
+Reference:
+
+- Ubuntu AMIs: <https://cloud-images.ubuntu.com/>
+- Spot instance types: <https://aws.amazon.com/ec2/purchasing-options/spot-instances/>
+- If your user data script doesn't seem to be executing...
+    - check that your script is at `/var/lib/cloud/instance/scripts/part-001`
+    - check the logs at `/var/log/cloud-init.log`
+    - check the logs at `/var/log/cloud-init-output.log`
