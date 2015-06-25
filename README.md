@@ -46,7 +46,7 @@ Then create a `factory` config at `~/.factory.json` with the following (filled w
     {
         "region": "us-east-1",
         "profile": "another_profile",
-        "ami": "ami-4be21a20",
+        "ami": "ami-a0c499c8",
         "key_name": "my_key_pair"
     }
 
@@ -55,15 +55,15 @@ If it will be consistent across your usage.
 Then you have a few options:
 
     # Create a spot instance request
-    $ python outsource.py request <name> <instance type> <path to user data script>
-    $ python outsource.py request doc2vec r3.2xlarge user_data.sh
+    $ python outsource.py request <name> <instance type> [--user_data=<path to user data script>] [--ami=<image id>]
+    $ python outsource.py request doc2vec r3.2xlarge --user_data=user_data.sh
     # Then you can do:
     $ ssh -i my_key_pair.pem ubuntu@<instance's public ip>
     # Try `ec2-user` if `ubuntu` doesn't work
 
     # Cancel a spot instance request
     $ python outsource.py cancel <request id>
-    $ python outsource.py cancel ssi-02baen2k
+    $ python outsource.py cancel sir-02baen2k
 
     # Terminate a spot instance
     $ python outsource.py terminate <name>
@@ -79,7 +79,7 @@ What `factory` does for you:
 
 Reference:
 
-- Ubuntu AMIs: <https://cloud-images.ubuntu.com/>
+- Ubuntu AMIs: <https://cloud-images.ubuntu.com/releases/>
 - Spot instance types: <https://aws.amazon.com/ec2/purchasing-options/spot-instances/>
 - If your user data script doesn't seem to be executing...
     - check that your script is at `/var/lib/cloud/instance/scripts/part-001`

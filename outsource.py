@@ -1,8 +1,10 @@
 import os
+import sys
 import json
 import click
 import boto3
 import base64
+import signal
 import requests
 from time import time
 from colorama import Fore
@@ -37,10 +39,14 @@ def cli():
 @connect_ec2
 @click.argument('tag')
 @click.argument('instance_type')
-@click.argument('user_data')
-def request(ec2, tag, instance_type, user_data):
+@click.option('--user_data', default='')
+@click.option('--ami', default=None)
+def request(ec2, tag, instance_type, user_data, ami):
     conf = _load_conf()
-    ami = conf['ami']
+
+    if ami is None:
+        ami = conf['ami']
+
     key_name = conf['key_name']
 
     if os.path.isfile(user_data):
@@ -84,6 +90,12 @@ def request(ec2, tag, instance_type, user_data):
     click.echo('Spot instance requested (request id: {}{}{})...'.format(Fore.BLUE, req_id, Fore.RESET))
 
     try:
+        def on_abort(signal, frame):
+            click.echo('Ctrl+C caught. Cleaning up...')
+            ec2.meta.client.cancel_spot_instance_requests(SpotInstanceRequestIds=[req_id])
+            sys.exit(0)
+        signal.signal(signal.SIGINT, on_abort)
+
         start = time()
         click.echo('Waiting (this can take a few minutes)...')
         waiter = ec2.meta.client.get_waiter('spot_instance_request_fulfilled')
